@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amigo Secreto da Família</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Nunito:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--pine:#12372a;--paper:#fffaf0;--ink:#26231d;--muted:#6f6a5c;--red:#c9372c;--red2:#a82a21;--gold:#f0b84a;--line:#e6dcc4;--ok:#1f6b4f}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;font:600 17px/1.5 Nunito,system-ui,sans-serif;color:var(--ink);background:var(--pine) radial-gradient(1200px 500px at 50% -10%,#1d5240,transparent 70%) no-repeat}
+.brand{max-width:560px;margin:0 auto;padding:28px 20px 8px;font:800 1.6rem Fraunces,Georgia,serif;color:var(--gold);text-align:center}
+main{max-width:560px;margin:0 auto;padding:12px 16px 48px}
+.card{background:var(--paper);border-radius:14px;padding:26px 22px;box-shadow:0 10px 30px rgba(0,0,0,.28);border-top:8px solid var(--red)}
+.card h2{margin:0 0 4px;font:800 1.55rem/1.2 Fraunces,Georgia,serif}
+.sub{margin:0 0 18px;color:var(--muted)}
+.btn{display:inline-block;font:700 1rem Nunito,system-ui,sans-serif;border:2px solid var(--pine);border-radius:10px;padding:11px 18px;background:var(--pine);color:#fff;cursor:pointer;text-decoration:none}
+.btn.red{background:var(--red);border-color:var(--red)}
+.btn.ghost{background:transparent;color:var(--pine)}
+.btn.big{padding:18px 22px;font-size:1.15rem}
+.btn:disabled,.opt:disabled,.name:disabled{cursor:not-allowed}
+.btn:disabled{opacity:.4}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.row{display:flex;gap:8px}
+input{flex:1;min-width:0;font:inherit;padding:11px 12px;border:2px solid var(--line);border-radius:10px;background:#fff}
+.chips{list-style:none;padding:0;margin:16px 0 8px;display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#efe5cd;border-radius:999px;padding:4px 6px 4px 14px}
+.x{border:0;background:#d8cba8;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:1rem;line-height:1}
+.blk{border-top:1px solid var(--line);padding:14px 0}
+.blk h3{margin:0 0 8px;font:700 1.05rem Fraunces,Georgia,serif}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{font:700 .95rem Nunito,system-ui,sans-serif;padding:7px 14px;border-radius:999px;border:2px solid var(--line);background:#fff;cursor:pointer}
+.opt.on{background:var(--red);border-color:var(--red);color:#fff}
+.opt:disabled{opacity:.4}
+.names{display:grid;gap:10px}
+.name{display:flex;justify-content:space-between;align-items:center;gap:10px;font:700 1.1rem Nunito,system-ui,sans-serif;padding:14px 16px;border-radius:12px;border:2px solid var(--line);background:#fff;cursor:pointer;text-align:left}
+.name.on{border-color:var(--pine);background:#e6f1ea}
+.name:disabled{background:#f1ede2;color:var(--muted)}
+.name small{font-weight:700;color:var(--ok)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.muted{color:var(--muted)}
+.small{font-size:.85rem;margin:6px 0 0}
+.err{color:var(--red2);font-weight:700}
+.warn{background:#fff1cf;border-left:5px solid var(--gold);padding:10px 12px;border-radius:6px;font-size:.92rem}
+.list{margin:8px 0;padding-left:20px}
+textarea{width:100%;font:.85rem/1.4 ui-monospace,monospace;padding:10px;border:2px solid var(--line);border-radius:10px;resize:vertical}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:20px;z-index:9}
+.box{background:var(--paper);border-radius:14px;padding:24px;max-width:420px}
+.box h3{margin:0 0 6px;font:800 1.3rem Fraunces,Georgia,serif}
+.center{text-align:center}
+.tag{position:relative;margin:26px auto 8px;max-width:340px;background:#fff;border:3px solid var(--gold);border-radius:6px 6px 22px 22px;padding:46px 18px 28px;transform:rotate(-2deg);box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.hole{position:absolute;top:12px;left:50%;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--paper);border:3px solid var(--gold)}
+.tag-lead{margin:0;color:var(--muted)}
+.tag-name{font:800 2.4rem/1.15 Fraunces,Georgia,serif;margin-top:6px;min-height:2.8rem;word-break:break-word}
+.tag.done .tag-name{color:var(--red)}
+.print{font:800 1.3rem Fraunces,Georgia,serif;margin:22px 0 4px}
+@media(prefers-reduced-motion:no-preference){.tag.done{animation:pop .5s}}
+@keyframes pop{0%{transform:rotate(-2deg) scale(.92)}60%{transform:rotate(-2deg) scale(1.04)}100%{transform:rotate(-2deg) scale(1)}}
+</style>
+</head>
+<body>
+<header class="brand">🎁 Amigo Secreto da Família</header>
+<main id="app"></main>
+<script>
+const app=document.getElementById('app');
+const h=(t,a,...c)=>{const e=document.createElement(t);for(const k in (a||{})){const v=a[k];if(k==='class')e.className=v;else if(k.slice(0,2)==='on')e.addEventListener(k.slice(2),v);else if(v!==false&&v!=null)e.setAttribute(k,v===true?'':v)}c.flat(9).forEach(x=>{if(x!=null&&x!==false)e.append(x)});return e};
+const mount=(n,top)=>{app.replaceChildren(n);if(top)window.scrollTo(0,0)};
+const card=(title,sub,...c)=>h('section',{class:'card'},h('h2',{},title),sub&&h('p',{class:'sub'},sub),c);
+const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const rnd=n=>crypto.getRandomValues(new Uint32Array(1))[0]%n;
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const newId=()=>Array.from(crypto.getRandomValues(new Uint8Array(6)),b=>(b%36).toString(36)).join('');
+
+/* Sorteio: encontra uma distribuição válida (cada um tira 1 pessoa, cada pessoa é tirada por 1) respeitando as exclusões */
+function solve(n,ex){
+  const opts=[...Array(n).keys()].map(i=>shuffle([...Array(n).keys()].filter(j=>j!==i&&!ex[i].has(j))));
+  const order=[...Array(n).keys()].sort((a,b)=>opts[a].length-opts[b].length);
+  const res=Array(n).fill(-1),used=Array(n).fill(false);let steps=0;
+  const go=k=>{if(k===n)return true;if(++steps>300000)return false;const i=order[k];
+    for(const j of opts[i]){if(used[j])continue;used[j]=true;res[i]=j;if(go(k+1))return true;used[j]=false;res[i]=-1}return false};
+  return go(0)?res:null;
+}
+
+/* Codificação do link (ofuscação leve, não é criptografia) */
+const b64e=u=>btoa(String.fromCharCode(...u)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+const xor=(u,k)=>u.map((b,i)=>b^k.charCodeAt(i%k.length));
+const pack=o=>o.i+'.'+b64e(xor(new TextEncoder().encode(JSON.stringify(o)),o.i));
+const unpack=s=>{const p=s.split('.');return JSON.parse(new TextDecoder().decode(xor(b64d(p[1]),p[0])))};
+
+/* ============ ORGANIZADOR ============ */
+function admin(){
+  let st=lsGet('as_admin',{names:[],ex:{}}),step=1,err='',link='';
+  const save=()=>lsSet('as_admin',st);
+  const norm=s=>s.trim().replace(/\s+/g,' ');
+  const view=()=>[s1,s2,s3,s4][step-1]();
+  const render=f=>{mount(view());if(f){const i=app.querySelector('input');if(i)i.focus()}};
+  const go=n=>{step=n;err='';mount(view(),true)};
+
+  function s1(){
+    const inp=h('input',{type:'text',placeholder:'Nome do participante',maxlength:30,autocomplete:'off','aria-label':'Nome do participante'});
+    const add=()=>{const v=norm(inp.value);if(!v)return;
+      if(st.names.some(n=>n.toLowerCase()===v.toLowerCase())){err='Esse nome já está na lista. Se houver dois com o mesmo nome, acrescente o sobrenome.';return render(true)}
+      st.names.push(v);err='';save();render(true)};
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();add()}});
+    const del=n=>{st.names=st.names.filter(x=>x!==n);delete st.ex[n];for(const k in st.ex)st.ex[k]=st.ex[k].filter(x=>x!==n);save();render()};
+    return card('Quem vai participar?','Passo 1 de 3. Adicione todos os participantes, incluindo você.',
+      h('div',{class:'row'},inp,h('button',{class:'btn',onclick:add},'Adicionar')),
+      err&&h('p',{class:'err'},err),
+      h('ul',{class:'chips'},st.names.map(n=>h('li',{class:'chip'},n,h('button',{class:'x','aria-label':'Remover '+n,onclick:()=>del(n)},'×')))),
+      h('p',{class:'muted small'},st.names.length+' participante(s). O mínimo é 3.'),
+      h('div',{class:'actions'},h('button',{class:'btn',disabled:st.names.length<3,onclick:()=>go(2)},'Continuar')));
+  }
+
+  function s2(){
+    return card('Quem não pode tirar quem?','Passo 2 de 3. Para cada pessoa, marque até 5 nomes que ela não poderá sortear. É opcional. Ninguém tira a si mesmo.',
+      st.names.map(g=>{const ex=st.ex[g]||[],full=ex.length>=5;
+        return h('div',{class:'blk'},h('h3',{},g+' não pode tirar'),
+          h('div',{class:'opts'},st.names.filter(n=>n!==g).map(n=>{const on=ex.includes(n);
+            return h('button',{class:'opt'+(on?' on':''),'aria-pressed':String(on),disabled:!on&&full,onclick:()=>{const cur=st.ex[g]||[];st.ex[g]=on?cur.filter(x=>x!==n):[...cur,n];save();render()}},n)})),
+          h('p',{class:'muted small'},ex.length+' de 5 exclusões'))}),
+      h('div',{class:'actions'},h('button',{class:'btn ghost',onclick:()=>go(1)},'Voltar'),h('button',{class:'btn',onclick:()=>go(3)},'Continuar')));
+  }
+
+  function s3(){
+    const total=Object.values(st.ex).reduce((a,b)=>a+b.length,0);
+    const withEx=st.names.filter(g=>(st.ex[g]||[]).length);
+    return card('Tudo certo?','Passo 3 de 3. Confira antes de criar. Depois de criado, o sorteio não pode ser alterado.',
+      h('p',{},h('strong',{},st.names.length+' participantes: '),st.names.join(', ')),
+      withEx.length?h('ul',{class:'list'},withEx.map(g=>h('li',{},g+' não tira: '+st.ex[g].join(', ')))):h('p',{class:'muted'},'Nenhuma exclusão marcada.'),
+      err&&h('p',{class:'err'},err),
+      h('div',{class:'actions'},h('button',{class:'btn ghost',onclick:()=>go(2)},'Voltar'),h('button',{class:'btn red',onclick:confirmCreate},'Criar sorteio')));
+  }
+
+  function confirmCreate(){
+    const m=h('div',{class:'modal',role:'dialog','aria-modal':'true'},h('div',{class:'box'},
+      h('h3',{},'Criar o sorteio agora?'),
+      h('p',{},'O resultado será definido neste momento e não poderá ser alterado. Você receberá o link para enviar à família.'),
+      h('div',{class:'actions'},h('button',{class:'btn ghost',onclick:()=>m.remove()},'Cancelar'),h('button',{class:'btn red',onclick:()=>{m.remove();create()}},'Sim, criar sorteio'))));
+    document.body.append(m);
+  }
+
+  function create(){
+    const idx=Object.fromEntries(st.names.map((x,i)=>[x,i]));
+    const ex=st.names.map(g=>new Set((st.ex[g]||[]).map(x=>idx[x])));
+    const a=solve(st.names.length,ex);
+    if(!a){err='Com essas exclusões não existe nenhum sorteio possível: alguém ficaria sem ninguém para tirar. Volte e remova algumas exclusões.';step=3;return mount(view(),true)}
+    link=location.href.split('#')[0]+'#s='+pack({i:newId(),n:st.names,a});
+    go(4);
+  }
+
+  function s4(){
+    return card('Sorteio criado!','Envie este link para a família. Cada pessoa abre, escolhe o próprio nome e sorteia.',
+      h('textarea',{readonly:true,rows:4,onclick:e=>e.target.select(),'aria-label':'Link do sorteio'},link),
+      h('div',{class:'actions'},
+        h('button',{class:'btn',onclick:e=>{const b=e.target;navigator.clipboard.writeText(link).then(()=>{b.textContent='Link copiado!'}).catch(()=>{b.parentElement.previousSibling.select()})}},'Copiar link'),
+        h('a',{class:'btn ghost',href:'https://wa.me/?text='+encodeURIComponent('Amigo secreto da família! Abra, escolha o seu nome e sorteie: '+link),target:'_blank',rel:'noopener'},'Enviar pelo WhatsApp')),
+      location.protocol==='file:'&&h('p',{class:'warn'},'Você abriu este arquivo direto do computador, então o link só funciona neste aparelho. Publique o arquivo em um endereço da internet, abra esse endereço e crie o sorteio de lá.'),
+      h('p',{class:'warn'},'Abra o link só na hora de sortear o seu próprio nome. Se você sortear neste aparelho, o seu nome ficará marcado como realizado aqui.'),
+      h('div',{class:'actions'},h('button',{class:'btn ghost',onclick:()=>{if(confirm('Descartar este sorteio e começar outro? O link atual continuará funcionando para quem já o recebeu.')){st={names:[],ex:{}};save();link='';go(1)}}},'Criar novo sorteio')));
+  }
+  render();
+}
+
+/* ============ PARTICIPANTE ============ */
+function player(payload){
+  let d;
+  try{d=unpack(payload);if(!Array.isArray(d.n)||!Array.isArray(d.a)||d.n.length!==d.a.length)throw 0}
+  catch(e){return mount(card('Link inválido','Peça ao organizador para enviar o link novamente.'))}
+  const key='as_done_'+d.i;
+  const doneSet=()=>new Set(lsGet(key,[]));
+  let sel=-1;
+
+  function list(top){
+    const dn=doneSet();
+    const order=d.n.map((_,i)=>i).sort((x,y)=>d.n[x].localeCompare(d.n[y],'pt-BR'));
+    mount(card('Quem é você?','Toque no seu nome e confirme. Cada pessoa sorteia uma única vez.',
+      h('div',{class:'names'},order.map(i=>{const dd=dn.has(i);
+        return h('button',{class:'name'+(sel===i?' on':''),disabled:dd,'aria-pressed':String(sel===i),onclick:()=>{sel=i;list()}},h('span',{},d.n[i]),dd&&h('small',{},'Sorteio realizado ✅'))})),
+      h('div',{class:'actions'},h('button',{class:'btn',disabled:sel<0,onclick:()=>ready(sel)},'Confirmar que sou eu'))),top);
+  }
+
+  function ready(i){
+    mount(card('Olá, '+d.n[i]+'!','Quando estiver pronto para anotar o nome, toque no botão. Você só tem uma chance.',
+      h('div',{class:'actions'},
+        h('button',{class:'btn red big',onclick:()=>reveal(i)},'🎁 Sortear meu amigo secreto'),
+        h('button',{class:'btn ghost',onclick:()=>{sel=-1;list(true)}},'Não sou eu'))),true);
+  }
+
+  function reveal(i){
+    const dn=doneSet();
+    if(dn.has(i)){sel=-1;return list(true)}
+    dn.add(i);lsSet(key,[...dn]);
+    const others=d.n.filter((_,j)=>j!==i);
+    const out=h('div',{class:'tag-name','aria-live':'polite'},'…');
+    const tag=h('div',{class:'tag'},h('div',{class:'hole'}),h('p',{class:'tag-lead'},'Seu amigo secreto é'),out);
+    const note=h('p',{class:'print',hidden:true},'Tire print do seu nome sorteado');
+    const sub=h('p',{class:'muted',hidden:true},'Ao fechar ou recarregar esta página, o nome não aparece mais.');
+    mount(h('section',{class:'card center'},tag,note,sub),true);
+    let t=0;
+    const iv=setInterval(()=>{
+      out.textContent=others[rnd(others.length)];
+      if(++t>22){clearInterval(iv);out.textContent=d.n[d.a[i]];tag.classList.add('done');note.hidden=false;sub.hidden=false}
+    },90);
+  }
+
+  list(true);
+}
+
+const m=location.hash.match(/^#s=(.+)$/);
+if(m)player(m[1]);else admin();
+window.addEventListener('hashchange',()=>location.reload());
+</script>
+</body>
+</html>
