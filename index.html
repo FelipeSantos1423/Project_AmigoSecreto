@@ -63,6 +63,11 @@ textarea{width:100%;font:.85rem/1.4 ui-monospace,monospace;padding:10px;border:2
 <header class="brand">🎁 Amigo Secreto da Família</header>
 <main id="app"></main>
 <script>
+/* ===== CONFIGURAÇÃO: cole aqui o endereço do seu Firebase Realtime Database =====
+   Exemplo: 'https://amigo-secreto-familia-default-rtdb.firebaseio.com'
+   Deixe vazio para funcionar sem banco (status só no aparelho de cada pessoa). */
+const DB_URL='https://amigo-secreto-42df6-default-rtdb.firebaseio.com/';
+
 const app=document.getElementById('app');
 const h=(t,a,...c)=>{const e=document.createElement(t);for(const k in (a||{})){const v=a[k];if(k==='class')e.className=v;else if(k.slice(0,2)==='on')e.addEventListener(k.slice(2),v);else if(v!==false&&v!=null)e.setAttribute(k,v===true?'':v)}c.flat(9).forEach(x=>{if(x!=null&&x!==false)e.append(x)});return e};
 const mount=(n,top)=>{app.replaceChildren(n);if(top)window.scrollTo(0,0)};
@@ -158,7 +163,8 @@ function admin(){
         h('button',{class:'btn',onclick:e=>{const b=e.target;navigator.clipboard.writeText(link).then(()=>{b.textContent='Link copiado!'}).catch(()=>{b.parentElement.previousSibling.select()})}},'Copiar link'),
         h('a',{class:'btn ghost',href:'https://wa.me/?text='+encodeURIComponent('Amigo secreto da família! Abra, escolha o seu nome e sorteie: '+link),target:'_blank',rel:'noopener'},'Enviar pelo WhatsApp')),
       location.protocol==='file:'&&h('p',{class:'warn'},'Você abriu este arquivo direto do computador, então o link só funciona neste aparelho. Publique o arquivo em um endereço da internet, abra esse endereço e crie o sorteio de lá.'),
-      h('p',{class:'warn'},'Abra o link só na hora de sortear o seu próprio nome. Se você sortear neste aparelho, o seu nome ficará marcado como realizado aqui.'),
+      !DB_URL&&h('p',{class:'warn'},'Banco de dados não configurado: o status de sorteio realizado fica salvo só no aparelho de cada pessoa.'),
+      h('p',{class:'warn'},'Abra o link só na hora de sortear o seu próprio nome, pois o sorteio vale uma única vez.'),
       h('div',{class:'actions'},h('button',{class:'btn ghost',onclick:()=>{if(confirm('Descartar este sorteio e começar outro? O link atual continuará funcionando para quem já o recebeu.')){st={names:[],ex:{}};save();link='';go(1)}}},'Criar novo sorteio')));
   }
   render();
@@ -170,29 +176,66 @@ function player(payload){
   try{d=unpack(payload);if(!Array.isArray(d.n)||!Array.isArray(d.a)||d.n.length!==d.a.length)throw 0}
   catch(e){return mount(card('Link inválido','Peça ao organizador para enviar o link novamente.'))}
   const key='as_done_'+d.i;
-  const doneSet=()=>new Set(lsGet(key,[]));
-  let sel=-1;
+  const api=DB_URL?DB_URL.replace(/\/+$/,'')+'/s/'+d.i+'/done':'';
+  let remote=new Set(),sel=-1;
+  const doneSet=()=>new Set([...lsGet(key,[]),...remote]);
 
-  function list(top){
+  /* lê do banco quem já sorteou */
+  async function load(){
+    if(!api)return true;
+    try{
+      const r=await fetch(api+'.json',{cache:'no-store'});if(!r.ok)throw 0;
+      const o=(await r.json())||{};
+      remote=new Set(Object.keys(o).filter(k=>o[k]===true&&/^p\d+$/.test(k)).map(k=>+k.slice(1)));
+      return true;
+    }catch(e){return false}
+  }
+  /* reserva o sorteio no banco: só o primeiro registro vale (as regras bloqueiam o segundo) */
+  async function claim(i){
+    if(!api)return true;
+    const r=await fetch(api+'/p'+i+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:'true'});
+    if(r.ok)return true;
+    if(r.status===401||r.status===403)return false;
+    throw new Error('http '+r.status);
+  }
+
+  async function start(){
+    mount(card('Carregando…','Buscando quem já sorteou.'),true);
+    list(true,!(await load()));
+  }
+
+  function list(top,offline){
     const dn=doneSet();
     const order=d.n.map((_,i)=>i).sort((x,y)=>d.n[x].localeCompare(d.n[y],'pt-BR'));
+    if(sel>=0&&dn.has(sel))sel=-1;
+    const pend=d.n.length-dn.size;
     mount(card('Quem é você?','Toque no seu nome e confirme. Cada pessoa sorteia uma única vez.',
+      offline&&h('p',{class:'warn'},'Não consegui atualizar a lista agora. Confira a internet e toque em Atualizar.'),
       h('div',{class:'names'},order.map(i=>{const dd=dn.has(i);
         return h('button',{class:'name'+(sel===i?' on':''),disabled:dd,'aria-pressed':String(sel===i),onclick:()=>{sel=i;list()}},h('span',{},d.n[i]),dd&&h('small',{},'Sorteio realizado ✅'))})),
-      h('div',{class:'actions'},h('button',{class:'btn',disabled:sel<0,onclick:()=>ready(sel)},'Confirmar que sou eu'))),top);
+      h('p',{class:'muted small'},pend>0?pend+' de '+d.n.length+' ainda não sortearam.':'Todos já sortearam!'),
+      h('div',{class:'actions'},
+        h('button',{class:'btn',disabled:sel<0,onclick:()=>ready(sel)},'Confirmar que sou eu'),
+        api&&h('button',{class:'btn ghost',onclick:start},'Atualizar lista'))),top);
   }
 
   function ready(i){
+    const msg=h('p',{class:'err',role:'alert'});
+    const go=h('button',{class:'btn red big',onclick:()=>reveal(i,go,msg)},'🎁 Sortear meu amigo secreto');
     mount(card('Olá, '+d.n[i]+'!','Quando estiver pronto para anotar o nome, toque no botão. Você só tem uma chance.',
-      h('div',{class:'actions'},
-        h('button',{class:'btn red big',onclick:()=>reveal(i)},'🎁 Sortear meu amigo secreto'),
+      msg,
+      h('div',{class:'actions'},go,
         h('button',{class:'btn ghost',onclick:()=>{sel=-1;list(true)}},'Não sou eu'))),true);
   }
 
-  function reveal(i){
-    const dn=doneSet();
-    if(dn.has(i)){sel=-1;return list(true)}
-    dn.add(i);lsSet(key,[...dn]);
+  async function reveal(i,btn,msg){
+    btn.disabled=true;msg.textContent='';
+    await load();
+    if(doneSet().has(i)){sel=-1;return list(true)}
+    try{
+      if(!(await claim(i))){await load();sel=-1;return list(true)}
+    }catch(e){btn.disabled=false;msg.textContent='Sem conexão. Verifique a internet e toque em sortear de novo.';return}
+    lsSet(key,[...new Set([...lsGet(key,[]),i])]);
     const others=d.n.filter((_,j)=>j!==i);
     const out=h('div',{class:'tag-name','aria-live':'polite'},'…');
     const tag=h('div',{class:'tag'},h('div',{class:'hole'}),h('p',{class:'tag-lead'},'Seu amigo secreto é'),out);
@@ -206,7 +249,7 @@ function player(payload){
     },90);
   }
 
-  list(true);
+  start();
 }
 
 const m=location.hash.match(/^#s=(.+)$/);
